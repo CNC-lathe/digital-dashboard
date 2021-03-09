@@ -1,0 +1,4 @@
+[submodule "learning-factory-machine-configs"]
+	path = learning-factory-machine-configs
+	url = https://github.com/CNC-lathe/learning-factory-machine-configs.git
+	branch = main
