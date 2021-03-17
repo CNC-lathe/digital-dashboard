@@ -1,27 +1,28 @@
 from typing import Dict
 
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 
 from lf_utils.config_utils import instantiate
 
 
-def build_nested_text_component(**nested_text_conf: Dict) -> html.Div:
-    """Builds nested text component from config
+def build_row(**row_conf: Dict) -> html.Div:
+    """Builds text row component from config
 
     Parameters
     ----------
-    nested_text_conf : Dict
-        configuration for nested text component
+    row_conf : Dict
+        configuration for row text component
         contains information on parent as well as children
 
     Returns
     -------
     html.Div
-        the HTML Div constructed from the config
+        the HTML div constructed from the config
     """
     return html.Div(children=[
-        html.H2(children=nested_text_conf["name"]),
-        *(instantiate(text_conf) for text_conf in nested_text_conf["fields"])
+        html.H3(children=row_conf["name"], style={"text-decoration": "underline"}),
+        dbc.Row([*(dbc.Col(instantiate(text_conf)) for text_conf in row_conf["fields"])])
     ])
 
 

@@ -1,11 +1,12 @@
 from typing import Dict
 
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 
 from lf_utils.config_utils import instantiate
 
 
-def build_section(**section_conf: Dict) -> html.Div:
+def build_section(**section_conf: Dict) -> dbc.Container:
     """Builds section component from config
 
     Parameters
@@ -16,11 +17,11 @@ def build_section(**section_conf: Dict) -> html.Div:
 
     Returns
     -------
-    html.Div
-        the HTML Div constructed from the config
+    dbc.Container
+        the DBC container constructed from the config
     """
-    return html.Div(children=[
-        html.H1(children=section_conf["name"]),
+    return dbc.Container(children=[
+        html.H1(children=section_conf["name"], style={"text-decoration": "underline"}),
         *(instantiate(component_conf) for component_conf in section_conf["fields"]),
         html.Hr()
     ])

@@ -29,7 +29,7 @@ class DashApp:
         self.machine_configs = machine_configs
 
         # create dash app
-        self.dash_app = dash.Dash("Digital Dashboard", external_stylesheets=[dbc.themes.SLATE])
+        self.dash_app = dash.Dash("Digital Dashboard", external_stylesheets=[dbc.themes.DARKLY])
         self.dash_app.layout = html.Div(children=[
             instantiate(machine_section)
             for machine_section in self.machine_configs.values()
