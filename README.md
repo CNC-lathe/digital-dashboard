@@ -16,5 +16,5 @@ python3 -m pip install -e .
 ## Testing Instructions
 You can run the test suite with the following command:
 ```
-tox
+pytest tests
 ```

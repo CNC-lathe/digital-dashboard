@@ -3,9 +3,11 @@ from typing import Any, Dict
 import dash
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+import flask
 import zmq
 
 from lf_utils.config_utils import instantiate
+import lf_utils
 
 
 class DashApp:
@@ -23,7 +25,9 @@ class DashApp:
         # set up data socket
         self.context = zmq.Context()
         self.data_socket = self.context.socket(zmq.PULL)
-#        self.data_socket.bind(f"tcp://*:{data_port}")
+#        lf_utils.retry_utils.retry(
+#            self.data_socket.bind, f"tcp://*:{data_port}", handled_exceptions=zmq.error.ZMQError
+#        )
 
         # get machine configs
         self.machine_configs = machine_configs
@@ -37,4 +41,8 @@ class DashApp:
 
     def run(self):
         """Runs dash server."""
-        self.dash_app.run_server(port=49153, debug=True)
+        self.dash_app.run_server(debug=True)
+
+    def shutdown(self):
+        """Stops dash server."""
+        flask.request.enviorn.get("werkzeug.server.shutdown")()
