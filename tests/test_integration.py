@@ -28,6 +28,9 @@ class MockLFServer(threading.Thread):
         update_interval : float
             interval to send data at
         """
+        # init thread
+        super().__init__()
+
         # set orig machine configs
         self.orig_machine_configs = machine_configs
 
@@ -49,7 +52,8 @@ class MockLFServer(threading.Thread):
     def run(self):
        """Sends randomized data over socket at update rate."""
        while not self.stopped:
-           self._digital_dash_socket.send_pyobj(self._gen_data(copy.deepcopy(self.orig_machine_configs)))
+           generated_data = self._gen_data(copy.deepcopy(self.orig_machine_configs))
+           self._digital_dash_socket.send_pyobj(generated_data)
 
            time.sleep(self.update_interval)
 
@@ -57,20 +61,32 @@ class MockLFServer(threading.Thread):
         """Asynchonously stops mock lf server thread."""
         self.stopped = True
 
-    def _gen_data(self, machine_configs: Dict[str, Any]):
+    def _gen_data(self, machine_configs: Dict[str, Any]) -> Dict[str, Any]:
         """Generates randomized data
 
         Parameters
         ----------
         machine_configs : Dict[str, Any]
             machine configs, to use to generate data
+
+        Returns
+        ----------
+        Dict[str, Any]
+            machine configs with generated data
         """
         for k, v in machine_configs.items():
             if isinstance(v, dict):
                 machine_configs[k] = self._gen_data(v)
 
+            elif isinstance(v, list):
+                for ii, el in enumerate(v):
+                    if isinstance(el, dict):
+                        v[ii] = self._gen_data(el)
+
             elif k == "data":
                 machine_configs[k] = self._gen_random_val(type(v))
+
+        return machine_configs
 
     def _gen_random_val(self, data_type: Type) -> Any:
         """Generates random value of type <data_type>
@@ -116,27 +132,25 @@ def test_integration(update_interval: float):
         machine_configs = yaml.load(machine_conf_file, Loader=lf_utils.yaml_loader.Loader)
 
     # init dash app
-    dash_app = DashApp(49160, machine_configs)
+    dash_app = DashApp(49160, copy.deepcopy(machine_configs))
 
     # init mock lf server
-#    mock_lf_server = MockLFServer(49160, machine_configs, update_interval=update_interval)
+    mock_lf_server = MockLFServer(49160, copy.deepcopy(machine_configs), update_interval=update_interval)
 
     # start dash app
-    dash_app.run()
+    dash_app.start()
 
     # start mock lf server
-#    mock_lf_server.start()
+    mock_lf_server.start()
 
     # wait for user to exit
     input("Press any key to go to next test")
 
-    # stop lf server and dash app
-#    mock_lf_server.stop()
-    dash_app.shutdown()
+    # stop lf server
+    mock_lf_server.stop()
 
 
 if __name__ == "__main__":
-    update_intervals = [0.5, 1.0, 2.5]
+    update_interval = 1.0
 
-    for update_interval in update_intervals:
-        test_integration(update_interval)
+    test_integration(update_interval)

@@ -20,8 +20,12 @@ def build_section(**section_conf: Dict) -> dbc.Container:
     dbc.Container
         the DBC container constructed from the config
     """
-    return dbc.Container(children=[
-        html.H1(children=section_conf["name"], style={"text-decoration": "underline"}),
-        *(instantiate(component_conf) for component_conf in section_conf["fields"]),
-        html.Hr()
-    ])
+    return dbc.Container(
+        children=[
+            html.H1(
+                children=section_conf["name"], style={"text-decoration": "underline"}
+            ),
+            *(instantiate(component_conf) for component_conf in section_conf["fields"]),
+            html.Hr(),
+        ]
+    )

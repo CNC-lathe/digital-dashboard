@@ -20,10 +20,14 @@ def build_row(**row_conf: Dict) -> html.Div:
     html.Div
         the HTML div constructed from the config
     """
-    return html.Div(children=[
-        html.H3(children=row_conf["name"], style={"text-decoration": "underline"}),
-        dbc.Row([*(dbc.Col(instantiate(text_conf)) for text_conf in row_conf["fields"])])
-    ])
+    return html.Div(
+        children=[
+            html.H3(children=row_conf["name"], style={"text-decoration": "underline"}),
+            dbc.Row(
+                [*(dbc.Col(instantiate(text_conf)) for text_conf in row_conf["fields"])]
+            ),
+        ]
+    )
 
 
 def build_text_component(**text_conf: Dict) -> html.Pre:
@@ -39,4 +43,6 @@ def build_text_component(**text_conf: Dict) -> html.Pre:
     html.Pre
         the HTML Pre component constructed from the config
     """
-    return html.Pre(children=f"{text_conf['name']}: {text_conf['data']} {text_conf['postfix']}")
+    return html.Pre(
+        children=f"{text_conf['name']}: {text_conf['data']} {text_conf['postfix']}"
+    )
