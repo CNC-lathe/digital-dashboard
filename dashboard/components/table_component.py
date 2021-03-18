@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import dash_bootstrap_components as dbc
 import dash_html_components as html
@@ -31,7 +31,6 @@ def build_table(**table_conf: Dict) -> html.Div:
                         [
                             html.Th(
                                 fixed_width(f"{col['name']}", 25),
-                                style={"white-space": "pre-wrap"},
                             )
                             for col in table_conf["fields"]
                         ]
@@ -42,24 +41,22 @@ def build_table(**table_conf: Dict) -> html.Div:
                         [
                             html.Td(
                                 fixed_width(f"{col['data']} {col['postfix']}", 25),
-                                style={"white-space": "pre-wrap"},
                             )
                             if not isinstance(col["data"], float)
                             else html.Td(
                                 fixed_width(f"{col['data']:.3f} {col['postfix']}", 25),
-                                style={"white-space": "pre-wrap"},
                             )
                             for col in table_conf["fields"]
                         ]
                     )
                 ],
-                bordered=True,
+                bordered=True
             ),
         ]
     )
 
 
-def fixed_width(in_str: str, width: int) -> str:
+def fixed_width(in_str: str, width: int, align: Optional[str] = "<") -> str:
     """Creates fixed width string of width <width>
 
     Parameters
@@ -68,10 +65,12 @@ def fixed_width(in_str: str, width: int) -> str:
         input string
     width : int
         width of string
+    align : Optional[str]
+        alignment of text in whitespace
 
     Returns
     -------
     str
         fixed width string
     """
-    return f"{in_str:<{width}}"
+    return f"{in_str:{align}{width}}"
