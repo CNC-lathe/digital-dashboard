@@ -14,7 +14,7 @@ python3 -m pip install -e .
 ```
 
 ## Testing Instructions
-You can run the test suite with the following command:
+You can run the integration test with the following command:
 ```
-pytest tests
+python tests/test_integration.py
 ```
