@@ -58,7 +58,7 @@ class DashApp(threading.Thread):
                 html.Div(
                     [
                         instantiate(machine_section)
-                        for machine_section in self.dashboard_configs.values()
+                        for machine_section in copy.deepcopy(self.dashboard_configs).values()
                     ],
                     id="dashboard-id",
                 ),
@@ -96,7 +96,8 @@ class DashApp(threading.Thread):
 
         # create dbc containers and return them
         return [
-            instantiate(machine_section) for machine_section in dashboard_configs.values()
+            instantiate(machine_section)
+            for machine_section in copy.deepcopy(dashboard_configs).values()
         ]
 
     def run(self):

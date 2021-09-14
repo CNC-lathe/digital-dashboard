@@ -53,13 +53,63 @@ class MockLFServer(threading.Thread):
        """Sends randomized data over socket at update rate."""
        while not self.stopped:
            generated_data = self._gen_data(copy.deepcopy(self.orig_machine_configs))
-           self._digital_dash_socket.send_pyobj(generated_data)
+           machine_data = self.convert_from_machine_config_to_machine_data(generated_data)
+           self._digital_dash_socket.send_pyobj(machine_data)
 
            time.sleep(self.update_interval)
 
     def stop(self):
         """Asynchonously stops mock lf server thread."""
         self.stopped = True
+
+    def convert_from_machine_config_to_machine_data(
+        self, machine_configs: Dict[str, Dict]
+    ) -> Dict[str, Dict]:
+        """Converts machine config to machine data dictionary
+
+        Parameters
+        ----------
+        machine_configs : Dict[str, Dict]
+            generated machine config
+
+        Returns
+        -------
+        Dict[str, Dict]
+            converted machine data dictionary
+        """
+        machine_data = {}
+        for machine_name, machine_config in machine_configs.items():
+            machine_data[machine_name] = {}
+            self._convert_from_machine_config_to_machine_data(
+                machine_configs, machine_data[machine_name]
+            )
+
+        return machine_data
+
+    def _convert_from_machine_config_to_machine_data(
+        self, machine_config: Dict[str, Dict], machine_data: Dict[str, Dict]
+    ):
+        """Recursively converts machine config to machine data dictionary
+
+        Parameters
+        ----------
+        machine_config : Dict[str, Dict]
+            generated machine config
+        machine_data: Dict[str, Dict]
+            converted machine data dictionary
+        """
+        for k, v in machine_config.items():
+            if k == "id":
+                if "data" in machine_config:
+                    machine_data[v] = machine_config["data"]
+
+            elif isinstance(v, dict):
+                self._convert_from_machine_config_to_machine_data(v, machine_data)
+
+            elif isinstance(v, list):
+                for conf_dict in v:
+                    if isinstance(conf_dict, dict):
+                        self._convert_from_machine_config_to_machine_data(conf_dict, machine_data)
 
     def _gen_data(self, machine_configs: Dict[str, Any]) -> Dict[str, Any]:
         """Generates randomized data
