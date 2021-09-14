@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional
+import copy
 
 from dash.dependencies import Input, Output
 import dash
@@ -19,7 +20,7 @@ class DashApp(threading.Thread):
     def __init__(
         self,
         data_port: int,
-        machine_configs: Dict[str, Dict],
+        dashboard_configs: Dict[str, Dict],
         update_interval: Optional[float] = 1,
     ):
         """Initializes Dash app and layout, connects to data socket, sets up Dash callbacks
@@ -28,8 +29,8 @@ class DashApp(threading.Thread):
         ----------
         data_port : int
             port to receive data on
-        machine_configs : Dict[str, Dict]
-            configuration dictionaries for each machine
+        dashboard_configs : Dict[str, Dict]
+            configuration dictionaries for each machine's display on dashboard
         update_interval : Optional[float]
             update interval of dashboard, in seconds (by default 1 second)
         """
@@ -45,8 +46,8 @@ class DashApp(threading.Thread):
             handled_exceptions=zmq.error.ZMQError,
         )
 
-        # get machine configs
-        self.machine_configs = machine_configs
+        # get dashboard configs for each machine
+        self.dashboard_configs = dashboard_configs
 
         # create dash app
         self.dash_app = dash.Dash(
@@ -57,7 +58,7 @@ class DashApp(threading.Thread):
                 html.Div(
                     [
                         instantiate(machine_section)
-                        for machine_section in self.machine_configs.values()
+                        for machine_section in self.dashboard_configs.values()
                     ],
                     id="dashboard-id",
                 ),
@@ -87,12 +88,15 @@ class DashApp(threading.Thread):
         List[dbc.Container]
             updated dbc containers
         """
-        # get machine configs from socket
-        machine_configs = self.data_socket.recv_pyobj()
+        # get machine data from socket
+        machine_data = self.data_socket.recv_pyobj()
+
+        # merge machine data with dashboard configs
+        dashboard_configs = self.merge_machine_data(machine_data)
 
         # create dbc containers and return them
         return [
-            instantiate(machine_section) for machine_section in machine_configs.values()
+            instantiate(machine_section) for machine_section in dashboard_configs.values()
         ]
 
     def run(self):
@@ -102,3 +106,65 @@ class DashApp(threading.Thread):
     def shutdown(self):
         """Stops dash server."""
         flask.request.environ.get("werkzeug.server.shutdown")()
+
+    def merge_machine_data(self, machine_data: Dict[str, Dict]) -> Dict[str, Dict]:
+        """Merges machine data with dashboard configs to allow machine data to be displayed.
+
+        Parameters
+        ----------
+        machine_data : Dict[str, Dict]
+            machine data dictionaries (values of machine parameters)
+
+        Returns
+        -------
+        Dict[str, Dict]
+            machine dashboard dictionaries (with data filled out for each field)
+        """
+        # create copy of dashboard configs
+        dashboard_configs = copy.deepcopy(self.dashboard_configs)
+
+        for machine_name, machine_data_dict in machine_data.items():
+            # merge machine data into config
+            self._merge_machine_data(dashboard_configs[machine_name], machine_data_dict)
+        
+        return dashboard_configs
+
+    def _merge_machine_data(self, dashboard_config: Dict[str, Dict], machine_data: Dict[str, Any]):
+        """Recursive implementation of machine data merging.
+
+        Parameters
+        ----------
+        dashboard_config : Dict[str, Dict]
+            dashboard config to update with machine data
+        machine_data : Dict[str, Any]
+            machine data dictionary
+        """
+        for data_id, data_val in machine_data.items():
+            if isinstance(data_val, dict):
+                self._merge_machine_data(dashboard_config, data_val)
+
+            else:
+                self._fill_field_from_id(data_id, data_val, dashboard_config)
+
+    def _fill_field_from_id(self, data_id: str, data_val: Any, dashboard_config: Dict[str, Any]):
+        """Fills data id field with data val in dashboard config.
+
+        Parameters
+        ----------
+        data_id : str
+            id to target in dashboard config
+        data_val : Any
+            value to update with
+        dashboard_config : Dict[str, Any]
+            dashboard config to mutate
+        """
+        for k, v in dashboard_config.items():
+            if k == "id" and v == data_id:
+                dashboard_config["data"] = data_val
+
+            elif isinstance(v, list):
+                for conf_dict in v:
+                    self._fill_field_from_id(data_id, data_val, conf_dict)
+
+            elif isinstance(v, dict):
+                self._fill_field_from_id(data_id, data_val, v)

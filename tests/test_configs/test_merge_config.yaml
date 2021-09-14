@@ -1,0 +1,37 @@
+_target_: dashboard.components.build_section
+name: "example"
+id: "example"
+fields:
+  -
+    _target_: dashboard.components.build_table
+    name: "example_table"
+    id: "example_table"
+    fields:
+      -
+        name: "a"
+        id: "a"
+        data: 0
+        postfix: ""
+      -
+        name: "b"
+        id: "b"
+        data: 0
+        postfix: ""
+  -
+    _target_: dashboard.components.build_row
+    name: "example_row"
+    id: "example_row"
+    fields:
+      -
+        _target_: dashboard.components.build_text_component
+        name: "c"
+        id: "c"
+        data: ""
+        postfix: ""
+
+      -
+        _target_: dashboard.components.build_text_component
+        name: "d"
+        id: "d"
+        data: ""
+        postfix: ""
